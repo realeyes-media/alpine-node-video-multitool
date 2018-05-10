@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:8.0.0
+FROM quay.io/realeyes/alpine-node-git
 ENV PATH="$PATH:/bin/bash" \
     BENTO4_BIN="/opt/bento4/bin"
 
