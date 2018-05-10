@@ -13,4 +13,4 @@ Oracle Java is a pain to download programmatically due to the licence acceptance
 
 # References
 https://github.com/anapsix/docker-alpine-java
-mhart/node8
+http://www.oracle.com/technetwork/java/javase/downloads/server-jre8-downloads-2133154.html
