@@ -1,4 +1,4 @@
-FROM quay.io/realeyes/alpine-node-git
+FROM quay.io/realeyes/alpine-bento-ffmpeg:bento151-623
 ENV PATH="$PATH:/bin/bash" \
     BENTO4_BIN="/opt/bento4/bin" \
     JAVA_VERSION_MAJOR=8 \
@@ -16,10 +16,7 @@ ENV PATH="$PATH:/bin/bash" \
 RUN apk add --update sudo openntpd
 RUN ntpd -dn -p north-america.pool.ntp.org
 
-# FFMPEG
-RUN apk add --update ffmpeg
-
-# Install Java and GlibC
+# Install GlibC
 COPY server-jre-*-linux-x64.tar.gz /tmp/java.tar.gz
 RUN set -ex && \
     [[ ${JAVA_VERSION_MAJOR} != 7 ]] || ( echo >&2 'Oracle no longer publishes JAVA7 packages' && exit 1 ) && \
@@ -37,6 +34,7 @@ RUN set -ex && \
 # RUN curl -jksSLH "Cookie: oraclelicense=accept-securebackup-cookie" -o ${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz \
 #      http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}/0da788060d494f5095bf8624735fa2f1/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz
 
+# Install Java
 RUN JAVA_PACKAGE_SHA256=$(curl -sSL https://www.oracle.com/webfolder/s/digest/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}checksum.html | grep -E "${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64\.tar\.gz" | grep -Eo '(sha256: )[^<]+' | cut -d: -f2 | xargs) && \
     echo "${JAVA_PACKAGE_SHA256}  /tmp/java.tar.gz" > /tmp/java.tar.gz.sha256 && \
     sha256sum -c /tmp/java.tar.gz.sha256
@@ -84,31 +82,6 @@ RUN gunzip /tmp/java.tar.gz && \
            /tmp/* /var/cache/apk/* && \
     ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/jre/lib/security/cacerts && \
     echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf
-    
-# Install Bento
-WORKDIR /tmp/bento4
-ENV BENTO4_BASE_URL="http://zebulon.bok.net/Bento4/source/" \
-    BENTO4_VERSION="1-5-0-615" \
-    BENTO4_CHECKSUM="5378dbb374343bc274981d6e2ef93bce0851bda1" \
-    BENTO4_TARGET="" \
-    BENTO4_PATH="/opt/bento4" \
-    BENTO4_TYPE="SRC"
-    # download and unzip bento4
-RUN apk add --update --upgrade curl python unzip bash gcc g++ scons && \
-    curl -O -s ${BENTO4_BASE_URL}/Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip && \
-    sha1sum -b Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip | grep -o "^$BENTO4_CHECKSUM " && \
-    mkdir -p ${BENTO4_PATH} && \
-    unzip Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip -d ${BENTO4_PATH} && \
-    rm -rf Bento4-${BENTO4_TYPE}-${BENTO4_VERSION}${BENTO4_TARGET}.zip && \
-    apk del unzip && \
-    # don't do these steps if using binary install
-    cd ${BENTO4_PATH} && scons -u build_config=Release target=x86_64-unknown-linux && \
-    cp -R ${BENTO4_PATH}/Build/Targets/x86_64-unknown-linux/Release ${BENTO4_PATH}/bin && \
-    cp -R ${BENTO4_PATH}/Source/Python/utils ${BENTO4_PATH}/utils && \
-    cp -a ${BENTO4_PATH}/Source/Python/wrappers/. ${BENTO4_PATH}/bin
-
-# Install PM2
-RUN npm install pm2 -g
 
 # Show Java version
 CMD [ "java","-version" ]
