@@ -76,8 +76,10 @@ RUN set -ex && \
     ln -sf /etc/ssl/certs/java/cacerts $JAVA_HOME/jre/lib/security/cacerts && \
     echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' >> /etc/nsswitch.conf
 # Install MongoDB and MongoDB Tools
-RUN apk add --no-cache mongodb-tools mongodb && rm /usr/bin/mongoperf
-RUN mkdir -p /data/db
+RUN apk add --no-cache mongodb-tools mongodb && rm /usr/bin/mongoperf && mkdir -p /data/db
+
+# Install Gulp
+RUN npm install -g gulp
 
 # Show Java version
 CMD [ "java","-version" ]
